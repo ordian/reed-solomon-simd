@@ -10,9 +10,11 @@ use reed_solomon_simd::{
     ReedSolomonDecoder, ReedSolomonEncoder,
 };
 
+#[cfg(feature = "simd")]
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use reed_solomon_simd::engine::{Avx2, Ssse3};
 
+#[cfg(feature = "simd")]
 #[cfg(target_arch = "aarch64")]
 use reed_solomon_simd::engine::Neon;
 
@@ -295,6 +297,7 @@ fn benchmarks_engine(c: &mut Criterion) {
     benchmarks_engine_one(c, "engine-Naive", Naive::new());
     benchmarks_engine_one(c, "engine-NoSimd", NoSimd::new());
 
+    #[cfg(feature = "simd")]
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     {
         if is_x86_feature_detected!("ssse3") {
@@ -305,6 +308,7 @@ fn benchmarks_engine(c: &mut Criterion) {
         }
     }
 
+    #[cfg(feature = "simd")]
     #[cfg(target_arch = "aarch64")]
     {
         if std::arch::is_aarch64_feature_detected!("neon") {

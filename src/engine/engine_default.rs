@@ -1,8 +1,10 @@
 use crate::engine::{Engine, GfElement, NoSimd, ShardsRefMut, GF_ORDER};
 
+#[cfg(feature = "simd")]
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 use crate::engine::{Avx2, Ssse3};
 
+#[cfg(feature = "simd")]
 #[cfg(target_arch = "aarch64")]
 use crate::engine::Neon;
 
@@ -24,21 +26,24 @@ impl DefaultEngine {
     /// 1. [`Neon`]
     /// 2. [`NoSimd`]
     pub fn new() -> Self {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[cfg(feature = "simd")]
         {
-            if is_x86_feature_detected!("avx2") {
-                return DefaultEngine(Box::new(Avx2::new()));
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            {
+                if is_x86_feature_detected!("avx2") {
+                    return DefaultEngine(Box::new(Avx2::new()));
+                }
+
+                if is_x86_feature_detected!("ssse3") {
+                    return DefaultEngine(Box::new(Ssse3::new()));
+                }
             }
 
-            if is_x86_feature_detected!("ssse3") {
-                return DefaultEngine(Box::new(Ssse3::new()));
-            }
-        }
-
-        #[cfg(target_arch = "aarch64")]
-        {
-            if std::arch::is_aarch64_feature_detected!("neon") {
-                return DefaultEngine(Box::new(Neon::new()));
+            #[cfg(target_arch = "aarch64")]
+            {
+                if std::arch::is_aarch64_feature_detected!("neon") {
+                    return DefaultEngine(Box::new(Neon::new()));
+                }
             }
         }
 
@@ -86,21 +91,24 @@ impl Engine for DefaultEngine {
     }
 
     fn xor(x: &mut [u8], y: &[u8]) {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[cfg(feature = "simd")]
         {
-            if is_x86_feature_detected!("avx2") {
-                return Avx2::xor(x, y);
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            {
+                if is_x86_feature_detected!("avx2") {
+                    return Avx2::xor(x, y);
+                }
+
+                if is_x86_feature_detected!("ssse3") {
+                    return Ssse3::xor(x, y);
+                }
             }
 
-            if is_x86_feature_detected!("ssse3") {
-                return Ssse3::xor(x, y);
-            }
-        }
-
-        #[cfg(target_arch = "aarch64")]
-        {
-            if std::arch::is_aarch64_feature_detected!("neon") {
-                return Neon::xor(x, y);
+            #[cfg(target_arch = "aarch64")]
+            {
+                if std::arch::is_aarch64_feature_detected!("neon") {
+                    return Neon::xor(x, y);
+                }
             }
         }
 
@@ -108,21 +116,24 @@ impl Engine for DefaultEngine {
     }
 
     fn eval_poly(erasures: &mut [GfElement; GF_ORDER], truncated_size: usize) {
-        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        #[cfg(feature = "simd")]
         {
-            if is_x86_feature_detected!("avx2") {
-                return Avx2::eval_poly(erasures, truncated_size);
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            {
+                if is_x86_feature_detected!("avx2") {
+                    return Avx2::eval_poly(erasures, truncated_size);
+                }
+
+                if is_x86_feature_detected!("ssse3") {
+                    return Ssse3::eval_poly(erasures, truncated_size);
+                }
             }
 
-            if is_x86_feature_detected!("ssse3") {
-                return Ssse3::eval_poly(erasures, truncated_size);
-            }
-        }
-
-        #[cfg(target_arch = "aarch64")]
-        {
-            if std::arch::is_aarch64_feature_detected!("neon") {
-                return Neon::eval_poly(erasures, truncated_size);
+            #[cfg(target_arch = "aarch64")]
+            {
+                if std::arch::is_aarch64_feature_detected!("neon") {
+                    return Neon::eval_poly(erasures, truncated_size);
+                }
             }
         }
 

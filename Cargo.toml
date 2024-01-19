@@ -21,6 +21,10 @@ bytemuck = "1.7.3"
 fixedbitset = "0.4.0"
 once_cell = "1.8.0"
 
+[features]
+default = ["simd"]
+simd = []
+
 [build-dependencies]
 readme-rustdocifier = "0.1.0"
 
